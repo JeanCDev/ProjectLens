@@ -164,7 +164,7 @@ onMounted(async () => {
                 <div class="min-w-0 text-left">
                   <p class="truncate text-sm font-medium text-surface-300">{{ project.name }}</p>
                   <p class="truncate text-xs text-surface-500">
-                    {{ project.framework }} · {{ project.language }}
+                    {{ project.framework ?? '—' }} · {{ project.primary_language }}
                   </p>
                 </div>
               </div>

@@ -2,6 +2,7 @@
 import { computed, type Component } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUiStore } from '@/stores/ui'
+import { useAuthStore } from '@/stores/auth'
 import {
   Squares2X2Icon,
   FolderIcon,
@@ -14,6 +15,7 @@ import {
 
 const route = useRoute()
 const ui = useUiStore()
+const auth = useAuthStore()
 
 interface NavItem {
   label: string
@@ -89,11 +91,11 @@ const isActive = computed(() => (item: NavItem) => {
     <div class="border-t border-white/5 p-3">
       <div class="flex items-center gap-3 rounded-lg px-2 py-2" :class="ui.sidebarCollapsed && 'lg:justify-center lg:px-0'">
         <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-xs font-semibold text-white">
-          AS
+          {{ (auth.user?.name ?? 'U').charAt(0).toUpperCase() }}
         </div>
         <div v-if="!ui.sidebarCollapsed" class="min-w-0">
-          <p class="truncate text-xs font-medium text-surface-400">Ana Souza</p>
-          <p class="truncate text-[11px] text-surface-600">Administradora</p>
+          <p class="truncate text-xs font-medium text-surface-400">{{ auth.user?.name ?? 'Visitante' }}</p>
+          <p class="truncate text-[11px] text-surface-600">{{ auth.user?.email ?? '' }}</p>
         </div>
       </div>
     </div>

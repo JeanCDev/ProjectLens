@@ -1,29 +1,39 @@
-import { delay, randomIn } from './helpers'
-import { mockEndpoints } from './mock'
-import type { ApiEndpoint } from './types'
+import http from './http'
+import type { ApiEndpoint, PaginatedData } from './types'
+
+export interface EndpointRequestDetails {
+  method: string
+  url: string
+  request: {
+    headers: Record<string, string>
+    body: Record<string, unknown> | null
+  }
+  response: {
+    status: number
+    statusText: string
+    headers: Record<string, string>
+    body: Record<string, unknown>
+  }
+  duration_ms: number
+  checked_at: string | null
+}
 
 export const EndpointService = {
-  async list(projectId?: number): Promise<ApiEndpoint[]> {
-    await delay()
-    const items = projectId ? mockEndpoints.filter((e) => e.project_id === projectId) : [...mockEndpoints]
-    return items.map((endpoint) => ({ ...endpoint }))
+  async list(projectId: number): Promise<ApiEndpoint[]> {
+    const { data } = await http.get<PaginatedData<ApiEndpoint>>(`/projects/${projectId}/endpoints`)
+    return data.data
   },
 
-  async get(id: number): Promise<ApiEndpoint> {
-    await delay(randomIn(250, 450))
-    const endpoint = mockEndpoints.find((e) => e.id === id)
-    if (!endpoint) throw new Error('Endpoint não encontrado')
-    return { ...endpoint }
+  async get(projectId: number, id: number): Promise<ApiEndpoint> {
+    const { data } = await http.get<{ data: ApiEndpoint }>(`/projects/${projectId}/endpoints/${id}`)
+    return data.data
   },
 
-  async requestDetails(id: number) {
-    await delay(randomIn(600, 900))
-    const endpoint = mockEndpoints.find((e) => e.id === id)
-    if (!endpoint) throw new Error('Endpoint não encontrado')
-    const status = endpoint.status === 'active' ? 200 : endpoint.status === 'degraded' ? 429 : 500
+  requestDetails(endpoint: ApiEndpoint): EndpointRequestDetails {
+    const status = endpoint.status === 'healthy' ? 200 : endpoint.status === 'degraded' ? 429 : 500
     return {
       method: endpoint.method,
-      url: `https://api.acme.com${endpoint.path}`,
+      url: endpoint.url,
       request: {
         headers: {
           Authorization: 'Bearer sk_live_••••••••',
@@ -42,11 +52,11 @@ export const EndpointService = {
         },
         body: {
           data: { id: 'trx_abc123', status: status === 200 ? 'approved' : 'failed' },
-          meta: { took_ms: endpoint.response_time_ms },
+          meta: { took_ms: endpoint.response_time_ms ?? 0 },
         },
       },
-      duration_ms: endpoint.response_time_ms,
-      checked_at: endpoint.last_checked_at,
+      duration_ms: endpoint.response_time_ms ?? 0,
+      checked_at: endpoint.last_checked_at ?? null,
     }
   },
 }

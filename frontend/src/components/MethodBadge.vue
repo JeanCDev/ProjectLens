@@ -16,6 +16,10 @@ const color = computed(() => {
       return 'text-violet-300 bg-violet-500/10 border-violet-500/20'
     case 'DELETE':
       return 'text-rose-300 bg-rose-500/10 border-rose-500/20'
+    case 'OPTIONS':
+      return 'text-surface-300 bg-surface-500/10 border-surface-500/20'
+    case 'HEAD':
+      return 'text-surface-300 bg-surface-500/10 border-surface-500/20'
   }
 })
 </script>
