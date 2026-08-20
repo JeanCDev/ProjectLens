@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { EndpointService } from '@/services/EndpointService'
+import { EndpointService, type EndpointRequestDetails } from '@/services/EndpointService'
+import type { ApiEndpoint } from '@/services/types'
 import { timeAgo } from '@/utils/format'
 import PageHeader from '@/components/PageHeader.vue'
 import SectionCard from '@/components/SectionCard.vue'
@@ -11,18 +12,20 @@ import Loading from '@/components/Loading.vue'
 import { ArrowPathIcon } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
+const projectId = Number(route.params.projectId)
 const endpointId = Number(route.params.id)
 
-const endpoint = ref<Awaited<ReturnType<typeof EndpointService.get>> | null>(null)
-const details = ref<Awaited<ReturnType<typeof EndpointService.requestDetails>> | null>(null)
+const endpoint = ref<ApiEndpoint | null>(null)
+const details = ref<EndpointRequestDetails | null>(null)
 const loading = ref(true)
 const checking = ref(false)
 
 async function load() {
   loading.value = true
   try {
-    endpoint.value = await EndpointService.get(endpointId)
-    details.value = await EndpointService.requestDetails(endpointId)
+    const result = await EndpointService.get(projectId, endpointId)
+    endpoint.value = result
+    details.value = EndpointService.requestDetails(result)
   } finally {
     loading.value = false
   }
@@ -30,7 +33,9 @@ async function load() {
 
 async function recheck() {
   checking.value = true
-  await EndpointService.requestDetails(endpointId)
+  if (endpoint.value) {
+    details.value = EndpointService.requestDetails(endpoint.value)
+  }
   await load()
   checking.value = false
 }
@@ -42,9 +47,13 @@ onMounted(load)
   <div>
     <PageHeader
       v-if="endpoint"
-      :title="endpoint.path"
-      :subtitle="endpoint.description"
-      :breadcrumb="[{ label: 'Endpoints', to: '/endpoints' }, { label: endpoint.path }]"
+      :title="endpoint.url"
+      :subtitle="endpoint.name"
+      :breadcrumb="[
+        { label: 'Projects', to: '/projects' },
+        { label: `Projeto #${projectId}`, to: `/projects/${projectId}` },
+        { label: endpoint.url },
+      ]"
     >
       <template #actions>
         <button
@@ -72,16 +81,19 @@ onMounted(load)
         <div class="card-surface p-4">
           <p class="text-xs uppercase tracking-wider text-surface-600">Status</p>
           <div class="mt-2">
-            <StatusBadge :status="endpoint.status" />
+            <StatusBadge :status="endpoint.status" :label="endpoint.status_label" />
           </div>
         </div>
         <div class="card-surface p-4">
           <p class="text-xs uppercase tracking-wider text-surface-600">Tempo de resposta</p>
-          <p class="mt-2 font-mono text-lg font-semibold text-surface-200">{{ details.duration_ms }}ms</p>
+          <p class="mt-2 font-mono text-lg font-semibold text-surface-200">
+            {{ endpoint.response_time_ms ?? 0 }}ms
+          </p>
         </div>
         <div class="card-surface p-4">
           <p class="text-xs uppercase tracking-wider text-surface-600">Última verificação</p>
-          <p class="mt-2 text-sm text-surface-300">{{ timeAgo(details.checked_at) }}</p>
+          <p v-if="endpoint.last_checked_at" class="mt-2 text-sm text-surface-300">{{ timeAgo(endpoint.last_checked_at) }}</p>
+          <p v-else class="mt-2 text-sm text-surface-500">—</p>
         </div>
       </div>
 

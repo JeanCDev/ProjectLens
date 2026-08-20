@@ -1,16 +1,30 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useUiStore } from '@/stores/ui'
-import { Bars3Icon, BellIcon, MagnifyingGlassIcon } from '@heroicons/vue/24/outline'
+import { useAuthStore } from '@/stores/auth'
+import { Bars3Icon, BellIcon, MagnifyingGlassIcon, ArrowRightEndOnRectangleIcon, ArrowLeftEndOnRectangleIcon } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
+const router = useRouter()
 const ui = useUiStore()
+const auth = useAuthStore()
 
 const pageTitle = computed(() => {
   const title = route.meta.title
   return typeof title === 'string' ? title : 'Dashboard'
 })
+
+const initials = computed(() => {
+  const name = auth.user?.name ?? ''
+  const parts = name.trim().split(/\s+/)
+  return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || 'U'
+})
+
+async function onLogout() {
+  await auth.logout()
+  router.push('/login')
+}
 </script>
 
 <template>
@@ -44,13 +58,32 @@ const pageTitle = computed(() => {
         <span class="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-rose-400 ring-2 ring-surface-0" />
       </button>
 
-      <button
-        type="button"
-        class="ml-1 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-xs font-semibold text-white transition hover:opacity-90"
-        title="Perfil"
+      <template v-if="auth.isAuthenticated">
+        <button
+          type="button"
+          class="ml-1 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-xs font-semibold text-white transition hover:opacity-90"
+          :title="auth.user?.name"
+        >
+          {{ initials }}
+        </button>
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.02] px-3 py-1.5 text-xs font-medium text-surface-300 transition hover:bg-white/5 hover:text-surface-100"
+          title="Sair"
+          @click="onLogout"
+        >
+          <ArrowRightEndOnRectangleIcon class="h-4 w-4" />
+          <span class="hidden sm:inline">Sair</span>
+        </button>
+      </template>
+      <RouterLink
+        v-else
+        to="/login"
+        class="inline-flex items-center gap-2 rounded-lg bg-indigo-500 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-indigo-400"
       >
-        AS
-      </button>
+        <ArrowLeftEndOnRectangleIcon class="h-4 w-4" />
+        Entrar
+      </RouterLink>
     </div>
   </header>
 </template>
