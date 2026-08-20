@@ -20,6 +20,14 @@ vi.mock('@/services/DashboardService', () => ({
   },
 }))
 
+vi.mock('vue3-apexcharts', () => ({
+  default: {
+    name: 'VueApexCharts',
+    props: ['type', 'height', 'options', 'series'],
+    template: '<div class="apex-mock"></div>',
+  },
+}))
+
 // Store real do dashboard para storeToRefs funcionar
 const useDashboardStore = defineStore('dashboard-test', () => {
   const metrics = ref({

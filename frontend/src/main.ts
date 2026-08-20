@@ -24,6 +24,7 @@ app.use(PrimeVue, {
     },
   },
   ripple: true,
+  license: import.meta.env.VITE_PRIMEUI_LICENSE_KEY || undefined,
 })
 app.use(ToastService)
 app.use(ConfirmationService)
