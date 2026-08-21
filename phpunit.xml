@@ -17,12 +17,6 @@
             <directory>app</directory>
         </include>
     </source>
-    <coverage>
-        <report>
-            <clover outputFile="coverage/coverage.xml"/>
-            <text outputFile="php://stdout" showUncoveredFiles="true" showOnlySummary="true"/>
-        </report>
-    </coverage>
     <php>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
